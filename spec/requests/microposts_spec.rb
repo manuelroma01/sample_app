@@ -18,6 +18,7 @@ describe "Microposts" do
           click_button
           response.should render_template('pages/home')
           response.should have_selector("div#error_explanation")
+          response.should have_selector("span.microposts", :content => "0 microposts")
         end.should_not change(Micropost, :count)
       end
     end
@@ -30,6 +31,7 @@ describe "Microposts" do
           fill_in :micropost_content, :with => content
           click_button
           response.should have_selector("span.content", :content => content)
+          response.should have_selector("span.microposts", :content => "1 micropost")
         end.should change(Micropost, :count).by(1)
       end
     end

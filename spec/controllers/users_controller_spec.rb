@@ -75,14 +75,47 @@ describe UsersController do
       get :show, :id => @user
       response.should have_selector("h1>img", :class => "gravatar")
     end
-    
-    it "should show the user's microposts" do
-      mp1 = Factory(:micropost, :user => @user, :content => "Foo bar")
-      mp2 = Factory(:micropost, :user => @user, :content => "Baz quux")
-      get :show, :id => @user
-      response.should have_selector("span.content", :content => mp1.content)
-      response.should have_selector("span.content", :content => mp2.content)
-    end
+
+    describe "user's microposts" do
+      before(:each) do
+        50.times do
+          mp = Factory(:micropost, :user => @user)
+        end
+        @mp1 = Factory(:micropost, :user => @user, :content => "Foo bar")
+        @mp2 = Factory(:micropost, :user => @user, :content => "Baz quux")
+        
+        test_sign_in(@user)
+      end
+      
+      it "should show the user's microposts" do
+        get :show, :id => @user
+        response.should have_selector("span.content", :content => @mp1.content)
+        response.should have_selector("span.content", :content => @mp2.content)
+      end
+
+      it "should paginate the user's microposts" do
+        get :show, :id => @user
+        response.should have_selector("div.pagination")
+        response.should have_selector("span.disabled", :content => "Previous")
+        response.should have_selector("a", :href => "/users/1?page=2", :content => "2")
+        response.should have_selector("a", :href => "/users/1?page=2", :content => "Next")
+      end
+      
+      it "should have a delete link in user's microposts" do
+        get :show, :id => @user
+        response.should have_selector("a", :href => "/microposts/1", :content => "delete")
+      end
+      
+      it "should not have a delete link in other user's microposts" do
+        @another_user = Factory(:user, :email => "another@example.com")
+        5.times do
+          mp = Factory(:micropost, :user => @another_user)
+        end
+        
+        get :show, :id => @another_user
+        response.should_not have_selector("a", :href => "/microposts/1", :content => "delete")
+      end
+    end    
   end
 
   describe "GET 'new'" do

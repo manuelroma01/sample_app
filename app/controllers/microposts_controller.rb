@@ -1,6 +1,11 @@
 class MicropostsController < ApplicationController
-  before_filter :authenticate, :only => [:create, :destroy]
+  before_filter :authenticate, :only => [:create, :destroy, :index]
   before_filter :authorized_user, :only => :destroy
+
+  def index
+    @microposts = current_user.microposts.paginate(:page => params[:page])
+    @title = "Microposts list"
+  end 
   
   def create
     @micropost = current_user.microposts.build(params[:micropost])
@@ -17,6 +22,7 @@ class MicropostsController < ApplicationController
     @micropost.destroy
     redirect_back_or root_path
   end
+
   
 private
   def authorized_user
